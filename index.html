@@ -1,1 +1,359 @@
-# timer
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#211934">
+<title>LIVEタイマー</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #17152d;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+main {
+  min-height: 100vh;
+  max-width: 520px;
+  margin: auto;
+  padding: 20px 15px;
+  background: linear-gradient(160deg,#17152d,#30234b);
+}
+header {
+  text-align: center;
+  color: #e2d4ff;
+  font-weight: bold;
+}
+#display {
+  font-size: clamp(50px,15vw,78px);
+  font-weight: 850;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding: 22px 0 4px;
+}
+#status {
+  text-align: center;
+  color: #d7c9ee;
+  margin-bottom: 18px;
+}
+button, input { font: inherit; }
+button {
+  border: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#start {
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: #c5f59c;
+  color: #1c2b13;
+  font-size: 19px;
+  font-weight: bold;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.heading {
+  text-align: center;
+  padding: 12px 2px;
+  font-weight: bold;
+  border-radius: 10px 10px 0 0;
+}
+.plusHead { background: #d9417b; }
+.minusHead { background: #287cc7; }
+.buttons {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+.ltBtn {
+  min-height: 52px;
+  border-radius: 10px;
+  font-size: clamp(15px,4vw,19px);
+  font-weight: bold;
+}
+.plus { background: #ff8eb5; color: #351024; }
+.minus { background: #87c5ff; color: #102440; }
+.panel {
+  margin-top: 16px;
+  padding: 13px;
+  background: #ffffff10;
+  border-radius: 12px;
+}
+label {
+  display: block;
+  margin-bottom: 8px;
+}
+.setrow { display: flex; gap: 8px; }
+.setrow input {
+  width: 100%;
+  min-width: 0;
+  padding: 11px;
+  border-radius: 8px;
+  border: 0;
+  font-size: 17px;
+}
+.setrow button {
+  padding: 10px;
+  border-radius: 8px;
+  background: #d9c8ff;
+  color: #25153d;
+  font-weight: bold;
+  white-space: nowrap;
+}
+#counts {
+  text-align: center;
+  font-size: 13px;
+  color: #e2d4f7;
+  margin: 15px 0;
+}
+#reset {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #ffffff55;
+  border-radius: 10px;
+  background: #ffffff12;
+  color: white;
+  font-weight: bold;
+}
+#alarm {
+  display: none;
+  text-align: center;
+  font-size: 24px;
+  color: #ff9fca;
+  font-weight: 900;
+  margin-top: 16px;
+}
+.note {
+  text-align: center;
+  font-size: 12px;
+  color: #cfc2e1;
+  margin-top: 12px;
+}
+</style>
+</head>
+<body>
+<main>
+  <header>🌹 ギフトで延長 ／ 🐱 ギフトで短縮</header>
+
+  <div id="display">10:00</div>
+  <div id="status">スタート待ち</div>
+
+  <button id="start">▶ スタート</button>
+
+  <div class="grid">
+    <section>
+      <div class="heading plusHead">🌹 プラス</div>
+      <div class="buttons">
+        <button class="ltBtn plus" data-delta="5">＋ 5秒</button>
+        <button class="ltBtn plus" data-delta="60">＋ 1分</button>
+        <button class="ltBtn plus" data-delta="600">＋ 10分</button>
+        <button class="ltBtn plus" data-delta="3600">＋ 1時間</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="heading minusHead">🐱 マイナス</div>
+      <div class="buttons">
+        <button class="ltBtn minus" data-delta="-5">− 5秒</button>
+        <button class="ltBtn minus" data-delta="-60">− 1分</button>
+        <button class="ltBtn minus" data-delta="-600">− 10分</button>
+        <button class="ltBtn minus" data-delta="-3600">− 1時間</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="panel">
+    <label for="initial">初期時間（分）</label>
+    <div class="setrow">
+      <input id="initial" type="number"
+             min="0" max="100000" value="10">
+      <button id="set">時間設定</button>
+    </div>
+  </div>
+
+  <div id="counts">🌹 延長 0回 ／ 🐱 短縮 0回</div>
+  <button id="reset">↻ 初期時間にリセット</button>
+  <div id="alarm" role="alert">⏰ タイムアップ！</div>
+  <div class="note">0秒で終了音が鳴ります。配信前に音量を確認してね。</div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+let initial = 600;
+let left = 600;
+let running = false;
+let ended = false;
+let deadline = 0;
+let timer = null;
+let plus = 0;
+let minus = 0;
+let audio = null;
+
+function fmt(n) {
+  n = Math.max(0, Math.ceil(n));
+  const h = Math.floor(n / 3600);
+  const m = Math.floor(n % 3600 / 60);
+  const s = n % 60;
+
+  if (h > 0) {
+    return [h, m, s]
+      .map(v => String(v).padStart(2, '0'))
+      .join(':');
+  }
+
+  return [m, s]
+    .map(v => String(v).padStart(2, '0'))
+    .join(':');
+}
+
+function paint() {
+  $('display').textContent = fmt(left);
+  $('status').textContent = ended
+    ? 'タイムアップ！'
+    : running
+      ? 'カウントダウン中'
+      : left === initial
+        ? 'スタート待ち'
+        : '一時停止中';
+
+  $('start').textContent = running
+    ? '⏸ 一時停止'
+    : left === initial
+      ? '▶ スタート'
+      : '▶ 再開';
+
+  $('counts').textContent =
+    `🌹 延長 ${plus}回 ／ 🐱 短縮 ${minus}回`;
+
+  $('alarm').style.display = ended ? 'block' : 'none';
+}
+
+function stop() {
+  running = false;
+  if (timer !== null) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function sound() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+
+    audio = audio || new AC();
+
+    audio.resume().then(() => {
+      [0, 0.25, 0.5].forEach(t => {
+        const o = audio.createOscillator();
+        const g = audio.createGain();
+
+        o.frequency.value = 880;
+        g.gain.value = 0.15;
+        o.connect(g);
+        g.connect(audio.destination);
+        o.start(audio.currentTime + t);
+        o.stop(audio.currentTime + t + 0.16);
+      });
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+function finish() {
+  stop();
+  left = 0;
+  ended = true;
+  sound();
+  paint();
+}
+
+function tick() {
+  left = Math.max(0, (deadline - Date.now()) / 1000);
+  if (left <= 0) finish();
+  else paint();
+}
+
+function sync() {
+  if (running) tick();
+}
+
+document.querySelectorAll('[data-delta]').forEach(button => {
+  button.addEventListener('click', () => {
+    sync();
+    if (ended) return;
+
+    const d = Number(button.dataset.delta);
+    left = Math.max(0, Math.ceil(left) + d);
+
+    if (d > 0) plus++;
+    else minus++;
+
+    if (left === 0) {
+      finish();
+      return;
+    }
+
+    if (running) deadline = Date.now() + left * 1000;
+    paint();
+  });
+});
+
+$('start').addEventListener('click', () => {
+  if (running) {
+    sync();
+    stop();
+    paint();
+    return;
+  }
+
+  if (ended || left <= 0) return;
+
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      audio = audio || new AC();
+      audio.resume().catch(() => {});
+    }
+  } catch (e) {}
+
+  running = true;
+  deadline = Date.now() + left * 1000;
+  timer = setInterval(tick, 100);
+  paint();
+});
+
+$('set').addEventListener('click', () => {
+  const n = Number($('initial').value);
+
+  if (!Number.isFinite(n) || n < 0 || n > 100000) return;
+
+  stop();
+  initial = Math.round(n * 60);
+  left = initial;
+  ended = false;
+  plus = 0;
+  minus = 0;
+  paint();
+});
+
+$('reset').addEventListener('click', () => {
+  stop();
+  left = initial;
+  ended = false;
+  plus = 0;
+  minus = 0;
+  paint();
+});
+
+paint();
+</script>
+</body>
+</html>
