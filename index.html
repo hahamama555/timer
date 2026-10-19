@@ -3,357 +3,475 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#211934">
-<title>LIVEタイマー</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#111111">
+<title>LIVE カウントダウンタイマー</title>
+
 <style>
-* { box-sizing: border-box; }
-body {
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
   margin: 0;
-  background: #17152d;
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  width: 100%;
+  min-height: 100%;
+  background: #111;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
-main {
-  min-height: 100vh;
+
+body {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+.app {
+  width: 100%;
   max-width: 520px;
-  margin: auto;
-  padding: 20px 15px;
-  background: linear-gradient(160deg,#17152d,#30234b);
+  min-height: 96dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
 }
-header {
+
+.top {
   text-align: center;
-  color: #e2d4ff;
-  font-weight: bold;
+  padding-top: 6px;
 }
-#display {
-  font-size: clamp(50px,15vw,78px);
-  font-weight: 850;
+
+.title {
+  font-size: clamp(18px, 5vw, 25px);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.status {
+  margin-top: 7px;
+  color: #bbb;
+  font-size: 14px;
+}
+
+.timer-area {
+  flex: 1;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #333;
+  border-radius: 22px;
+  background: #191919;
+  padding: 10px 2px;
+  overflow: hidden;
+}
+
+.timer {
+  width: 100%;
   text-align: center;
+  white-space: nowrap;
+  font-size: clamp(48px, 15vw, 100px);
+  font-weight: 900;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
-  padding: 22px 0 4px;
+  letter-spacing: -2px;
+  color: #fff;
 }
-#status {
+
+.timer.negative {
+  color: #ff5252;
+}
+
+.timer-label {
+  margin-top: 12px;
+  color: #999;
+  font-size: 12px;
   text-align: center;
-  color: #d7c9ee;
-  margin-bottom: 18px;
 }
-button, input { font: inherit; }
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
 button {
-  border: 0;
+  border: none;
+  border-radius: 13px;
+  min-height: 48px;
+  padding: 10px 5px;
+  color: #fff;
+  font-size: clamp(15px, 4vw, 19px);
+  font-weight: 800;
   cursor: pointer;
   touch-action: manipulation;
 }
-#start {
-  width: 100%;
-  padding: 16px;
-  margin-bottom: 16px;
-  border-radius: 12px;
-  background: #c5f59c;
-  color: #1c2b13;
-  font-size: 19px;
-  font-weight: bold;
+
+button:active {
+  transform: scale(.97);
+  opacity: .85;
 }
-.grid {
+
+.plus {
+  background: #176b42;
+}
+
+.minus {
+  background: #9b3030;
+}
+
+.main-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 7px;
 }
-.heading {
-  text-align: center;
-  padding: 12px 2px;
-  font-weight: bold;
-  border-radius: 10px 10px 0 0;
+
+.start {
+  background: #087fdb;
 }
-.plusHead { background: #d9417b; }
-.minusHead { background: #287cc7; }
-.buttons {
-  display: grid;
+
+.pause {
+  background: #555;
+}
+
+.reset {
+  background: #333;
+  border: 1px solid #666;
+}
+
+.settings {
+  padding: 10px;
+  border-radius: 13px;
+  background: #1c1c1c;
+}
+
+.settings-title {
+  font-size: 13px;
+  color: #ccc;
+  margin-bottom: 7px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding-top: 8px;
 }
-.ltBtn {
-  min-height: 52px;
-  border-radius: 10px;
-  font-size: clamp(15px,4vw,19px);
-  font-weight: bold;
-}
-.plus { background: #ff8eb5; color: #351024; }
-.minus { background: #87c5ff; color: #102440; }
-.panel {
-  margin-top: 16px;
-  padding: 13px;
-  background: #ffffff10;
-  border-radius: 12px;
-}
-label {
-  display: block;
-  margin-bottom: 8px;
-}
-.setrow { display: flex; gap: 8px; }
-.setrow input {
+
+input {
   width: 100%;
   min-width: 0;
   padding: 11px;
-  border-radius: 8px;
-  border: 0;
-  font-size: 17px;
-}
-.setrow button {
-  padding: 10px;
-  border-radius: 8px;
-  background: #d9c8ff;
-  color: #25153d;
-  font-weight: bold;
-  white-space: nowrap;
-}
-#counts {
-  text-align: center;
-  font-size: 13px;
-  color: #e2d4f7;
-  margin: 15px 0;
-}
-#reset {
-  width: 100%;
-  padding: 13px;
-  border: 1px solid #ffffff55;
   border-radius: 10px;
-  background: #ffffff12;
-  color: white;
-  font-weight: bold;
+  border: 1px solid #555;
+  background: #080808;
+  color: #fff;
+  font-size: 18px;
 }
-#alarm {
-  display: none;
-  text-align: center;
-  font-size: 24px;
-  color: #ff9fca;
-  font-weight: 900;
-  margin-top: 16px;
+
+.set-button {
+  min-width: 82px;
+  min-height: 44px;
+  background: #444;
+  font-size: 14px;
 }
-.note {
+
+.hint {
+  color: #888;
+  font-size: 11px;
+  line-height: 1.5;
   text-align: center;
-  font-size: 12px;
-  color: #cfc2e1;
-  margin-top: 12px;
+  padding-bottom: 3px;
+}
+
+@media (max-height: 700px) {
+  .app {
+    min-height: 96dvh;
+    gap: 7px;
+  }
+
+  .timer-area {
+    min-height: 130px;
+  }
+
+  button {
+    min-height: 40px;
+    padding: 7px 4px;
+  }
+
+  .settings {
+    padding: 7px;
+  }
 }
 </style>
 </head>
+
 <body>
-<main>
-  <header>🌹 ギフトで延長 ／ 🐱 ギフトで短縮</header>
+<div class="app">
 
-  <div id="display">10:00</div>
-  <div id="status">スタート待ち</div>
-
-  <button id="start">▶ スタート</button>
-
-  <div class="grid">
-    <section>
-      <div class="heading plusHead">🌹 プラス</div>
-      <div class="buttons">
-        <button class="ltBtn plus" data-delta="5">＋ 5秒</button>
-        <button class="ltBtn plus" data-delta="60">＋ 1分</button>
-        <button class="ltBtn plus" data-delta="600">＋ 10分</button>
-        <button class="ltBtn plus" data-delta="3600">＋ 1時間</button>
-      </div>
-    </section>
-
-    <section>
-      <div class="heading minusHead">🐱 マイナス</div>
-      <div class="buttons">
-        <button class="ltBtn minus" data-delta="-5">− 5秒</button>
-        <button class="ltBtn minus" data-delta="-60">− 1分</button>
-        <button class="ltBtn minus" data-delta="-600">− 10分</button>
-        <button class="ltBtn minus" data-delta="-3600">− 1時間</button>
-      </div>
-    </section>
+  <div class="top">
+    <div class="title">LIVE TIMER</div>
+    <div class="status" id="status">スタート待ち</div>
   </div>
 
-  <div class="panel">
-    <label for="initial">初期時間（分）</label>
-    <div class="setrow">
-      <input id="initial" type="number"
-             min="0" max="100000" value="10">
-      <button id="set">時間設定</button>
+  <div class="timer-area">
+    <div class="timer" id="timer">10:00</div>
+    <div class="timer-label">0秒で音が鳴り、マイナス計測を継続</div>
+  </div>
+
+  <div class="controls">
+    <button class="plus" data-delta="10">＋10秒</button>
+    <button class="minus" data-delta="-10">−10秒</button>
+
+    <button class="plus" data-delta="30">＋30秒</button>
+    <button class="minus" data-delta="-30">−30秒</button>
+
+    <button class="plus" data-delta="60">＋1分</button>
+    <button class="minus" data-delta="-60">−1分</button>
+
+    <button class="plus" data-delta="600">＋10分</button>
+    <button class="minus" data-delta="-600">−10分</button>
+
+    <button class="plus" data-delta="3600">＋1時間</button>
+    <button class="minus" data-delta="-3600">−1時間</button>
+  </div>
+
+  <div class="main-buttons">
+    <button class="start" id="startBtn">▶ スタート</button>
+    <button class="pause" id="pauseBtn">⏸ 一時停止</button>
+    <button class="reset" id="resetBtn">↺ リセット</button>
+  </div>
+
+  <div class="settings">
+    <div class="settings-title">初期時間を設定（分）</div>
+    <div class="setting-row">
+      <input id="minutesInput" type="number" min="0" step="1"
+             value="10" inputmode="numeric" aria-label="初期時間（分）">
+      <button class="set-button" id="setBtn">時間設定</button>
     </div>
   </div>
 
-  <div id="counts">🌹 延長 0回 ／ 🐱 短縮 0回</div>
-  <button id="reset">↻ 初期時間にリセット</button>
-  <div id="alarm" role="alert">⏰ タイムアップ！</div>
-  <div class="note">0秒で終了音が鳴ります。配信前に音量を確認してね。</div>
-</main>
+  <div class="hint">
+    ギフトに合わせて時間を調整できます。<br>
+    0秒以降もマイナス方向に計測し続けます。
+  </div>
+
+</div>
 
 <script>
-const $ = id => document.getElementById(id);
+(() => {
+  const timerEl = document.getElementById("timer");
+  const statusEl = document.getElementById("status");
+  const minutesInput = document.getElementById("minutesInput");
 
-let initial = 600;
-let left = 600;
-let running = false;
-let ended = false;
-let deadline = 0;
-let timer = null;
-let plus = 0;
-let minus = 0;
-let audio = null;
+  const startBtn = document.getElementById("startBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const setBtn = document.getElementById("setBtn");
 
-function fmt(n) {
-  n = Math.max(0, Math.ceil(n));
-  const h = Math.floor(n / 3600);
-  const m = Math.floor(n % 3600 / 60);
-  const s = n % 60;
+  let left = 600;
+  let initialSeconds = 600;
+  let deadline = 0;
+  let running = false;
+  let intervalId = null;
+  let alarmPlayed = false;
+  let audioContext = null;
 
-  if (h > 0) {
-    return [h, m, s]
-      .map(v => String(v).padStart(2, '0'))
-      .join(':');
+  function formatTime(seconds) {
+    const negative = seconds < 0;
+    const total = Math.floor(Math.abs(seconds));
+
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const secs = total % 60;
+
+    const pad = n => String(n).padStart(2, "0");
+
+    let formatted;
+
+    if (hours > 0) {
+      formatted = `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+    } else {
+      formatted = `${pad(minutes)}:${pad(secs)}`;
+    }
+
+    return (negative ? "-" : "") + formatted;
   }
 
-  return [m, s]
-    .map(v => String(v).padStart(2, '0'))
-    .join(':');
-}
+  function paint() {
+    timerEl.textContent = formatTime(left);
+    timerEl.classList.toggle("negative", left < 0);
 
-function paint() {
-  $('display').textContent = fmt(left);
-  $('status').textContent = ended
-    ? 'タイムアップ！'
-    : running
-      ? 'カウントダウン中'
-      : left === initial
-        ? 'スタート待ち'
-        : '一時停止中';
-
-  $('start').textContent = running
-    ? '⏸ 一時停止'
-    : left === initial
-      ? '▶ スタート'
-      : '▶ 再開';
-
-  $('counts').textContent =
-    `🌹 延長 ${plus}回 ／ 🐱 短縮 ${minus}回`;
-
-  $('alarm').style.display = ended ? 'block' : 'none';
-}
-
-function stop() {
-  running = false;
-  if (timer !== null) {
-    clearInterval(timer);
-    timer = null;
+    if (running && left > 0) {
+      statusEl.textContent = "カウントダウン中";
+    } else if (running && left <= 0) {
+      statusEl.textContent = "マイナス計測中";
+    } else if (!running && left < 0) {
+      statusEl.textContent = "一時停止中（マイナス）";
+    } else if (!running && left === 0) {
+      statusEl.textContent = "0秒";
+    } else if (!running) {
+      statusEl.textContent = "一時停止中／スタート待ち";
+    }
   }
-}
 
-function sound() {
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
+  function playAlarm() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
 
-    audio = audio || new AC();
+      if (!audioContext) {
+        audioContext = new AudioCtx();
+      }
 
-    audio.resume().then(() => {
-      [0, 0.25, 0.5].forEach(t => {
-        const o = audio.createOscillator();
-        const g = audio.createGain();
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
 
-        o.frequency.value = 880;
-        g.gain.value = 0.15;
-        o.connect(g);
-        g.connect(audio.destination);
-        o.start(audio.currentTime + t);
-        o.stop(audio.currentTime + t + 0.16);
+      const startAt = audioContext.currentTime;
+
+      [880, 660, 880].forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const time = startAt + index * 0.28;
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(0.0001, time);
+        gain.gain.exponentialRampToValueAtTime(0.25, time + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.22);
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        oscillator.start(time);
+        oscillator.stop(time + 0.23);
       });
-    }).catch(() => {});
-  } catch (e) {}
-}
+    } catch (error) {
+      console.log("音声を再生できませんでした", error);
+    }
+  }
 
-function finish() {
-  stop();
-  left = 0;
-  ended = true;
-  sound();
-  paint();
-}
+  function checkZero() {
+    if (left <= 0 && !alarmPlayed) {
+      alarmPlayed = true;
+      playAlarm();
+    }
+  }
 
-function tick() {
-  left = Math.max(0, (deadline - Date.now()) / 1000);
-  if (left <= 0) finish();
-  else paint();
-}
+  function updateFromClock() {
+    if (!running) return;
 
-function sync() {
-  if (running) tick();
-}
+    left = (deadline - Date.now()) / 1000;
+    checkZero();
+    paint();
+  }
 
-document.querySelectorAll('[data-delta]').forEach(button => {
-  button.addEventListener('click', () => {
-    sync();
-    if (ended) return;
+  function startTimer() {
+    if (running) return;
 
-    const d = Number(button.dataset.delta);
-    left = Math.max(0, Math.ceil(left) + d);
+    running = true;
+    deadline = Date.now() + left * 1000;
 
-    if (d > 0) plus++;
-    else minus++;
+    if (audioContext && audioContext.state === "suspended") {
+      audioContext.resume();
+    }
 
-    if (left === 0) {
-      finish();
+    updateFromClock();
+    intervalId = window.setInterval(updateFromClock, 100);
+    paint();
+  }
+
+  function pauseTimer() {
+    if (!running) return;
+
+    left = (deadline - Date.now()) / 1000;
+    running = false;
+
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    paint();
+  }
+
+  function resetTimer() {
+    running = false;
+
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    left = initialSeconds;
+    alarmPlayed = false;
+    deadline = 0;
+
+    paint();
+  }
+
+  function adjustTime(delta) {
+    if (running) {
+      left = (deadline - Date.now()) / 1000;
+    }
+
+    left = Math.ceil(left) + delta;
+
+    // 正の時間に戻った場合、次の0秒到達時に再び鳴らす
+    if (left > 0) {
+      alarmPlayed = false;
+    }
+
+    if (running) {
+      deadline = Date.now() + left * 1000;
+    }
+
+    checkZero();
+    paint();
+  }
+
+  document.querySelectorAll("[data-delta]").forEach(button => {
+    button.addEventListener("click", () => {
+      adjustTime(Number(button.dataset.delta));
+    });
+  });
+
+  startBtn.addEventListener("click", startTimer);
+  pauseBtn.addEventListener("click", pauseTimer);
+  resetBtn.addEventListener("click", resetTimer);
+
+  setBtn.addEventListener("click", () => {
+    const value = Number(minutesInput.value);
+
+    if (
+      minutesInput.value.trim() === "" ||
+      !Number.isFinite(value) ||
+      value < 0
+    ) {
+      alert("0以上の分数を入力してください");
       return;
     }
 
-    if (running) deadline = Date.now() + left * 1000;
+    initialSeconds = Math.floor(value * 60);
+    left = initialSeconds;
+    alarmPlayed = false;
+
+    if (running) {
+      deadline = Date.now() + left * 1000;
+    }
+
+    checkZero();
     paint();
   });
-});
 
-$('start').addEventListener('click', () => {
-  if (running) {
-    sync();
-    stop();
-    paint();
-    return;
-  }
-
-  if (ended || left <= 0) return;
-
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) {
-      audio = audio || new AC();
-      audio.resume().catch(() => {});
-    }
-  } catch (e) {}
-
-  running = true;
-  deadline = Date.now() + left * 1000;
-  timer = setInterval(tick, 100);
   paint();
-});
-
-$('set').addEventListener('click', () => {
-  const n = Number($('initial').value);
-
-  if (!Number.isFinite(n) || n < 0 || n > 100000) return;
-
-  stop();
-  initial = Math.round(n * 60);
-  left = initial;
-  ended = false;
-  plus = 0;
-  minus = 0;
-  paint();
-});
-
-$('reset').addEventListener('click', () => {
-  stop();
-  left = initial;
-  ended = false;
-  plus = 0;
-  minus = 0;
-  paint();
-});
-
-paint();
+})();
 </script>
 </body>
 </html>
